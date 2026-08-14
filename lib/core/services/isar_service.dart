@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../models/category.dart';
@@ -62,13 +64,21 @@ class IsarService {
 
   Future<void> deleteCategory(int categoryId) async {
     await _isar.writeTxn(() async {
-      final category = await _isar.categorys.get(categoryId);
-      if (category != null) {
-        category.isDeleted = true;
-        category.updatedAt = DateTime.now();
-        await _isar.categorys.put(category);
-      }
+      await _isar.categorys.delete(categoryId);
     });
+
+    try {
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser != null) {
+        final userId = auth.currentUser!.uid;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('categories')
+            .doc(categoryId.toString())
+            .delete();
+      }
+    } catch (_) {}
   }
 
   // --- SharedContent Operations ---
@@ -125,36 +135,25 @@ class IsarService {
 
   Future<void> deleteSharedContent(int contentId) async {
     await _isar.writeTxn(() async {
-      final item = await _isar.sharedContents.get(contentId);
-      if (item != null) {
-        if (item.syncedAt == null) {
-          // Never uploaded to cloud: completely delete from local DB
-          await _isar.sharedContents.delete(contentId);
-        } else {
-          // Was uploaded to cloud: mark as deleted with reset syncedAt so cloud deletes it
-          item.isDeleted = true;
-          item.updatedAt = DateTime.now();
-          item.syncedAt = null;
-          await _isar.sharedContents.put(item);
-        }
-      }
+      await _isar.sharedContents.delete(contentId);
     });
+
+    try {
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser != null) {
+        final userId = auth.currentUser!.uid;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('shared_content')
+            .doc(contentId.toString())
+            .delete();
+      }
+    } catch (_) {}
   }
 
   // --- Unsynced Count for UI Badge ---
   Future<int> getUnsyncedCount(String userId) async {
-    // Purge any legacy soft-deleted items that were never synced
-    await _isar.writeTxn(() async {
-      final orphans = await _isar.sharedContents
-          .filter()
-          .isDeletedEqualTo(true)
-          .syncedAtIsNull()
-          .findAll();
-      for (var orphan in orphans) {
-        await _isar.sharedContents.delete(orphan.id);
-      }
-    });
-
     return await _isar.sharedContents
         .filter()
         .group((q) => q.userIdEqualTo(userId).or().userIdEqualTo('local_user'))

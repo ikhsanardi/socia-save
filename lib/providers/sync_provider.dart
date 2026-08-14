@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-import '../models/category.dart';
-import '../models/shared_content.dart';
 import 'category_provider.dart';
 import 'database_provider.dart';
 import 'shared_content_provider.dart';
@@ -70,12 +67,17 @@ class SyncNotifier extends StateNotifier<SyncState> {
       ref.read(userIdProvider.notifier).state = userId;
 
       final firestore = FirebaseFirestore.instance;
+      final syncTimestamp = DateTime.now();
 
-      // 3. Push local categories to Firestore
-      final categories = await isarService.getAllCategories(userId);
+      // 3. Fetch active local categories and content items
+      final localCategories = await isarService.getAllCategories(userId);
+      final localContents = await isarService.getSharedContent(userId: userId);
+      final activeCategoryIds = localCategories.map((c) => c.id).toSet();
+      final activeContentIds = localContents.map((c) => c.id).toSet();
+
+      // 4. Push all active local categories to Firestore
       final batch = firestore.batch();
-
-      for (var cat in categories) {
+      for (var cat in localCategories) {
         final docRef = firestore
             .collection('users')
             .doc(userId)
@@ -89,15 +91,12 @@ class SyncNotifier extends StateNotifier<SyncState> {
           'colorHex': cat.colorHex,
           'createdAt': cat.createdAt.toIso8601String(),
           'updatedAt': cat.updatedAt.toIso8601String(),
-          'isDeleted': cat.isDeleted,
+          'isDeleted': false,
         }, SetOptions(merge: true));
       }
 
-      // 4. Push local shared content items to Firestore
-      final allLocalItems = await isarService.getSharedContent(userId: userId);
-      final syncTimestamp = DateTime.now();
-
-      for (var item in allLocalItems) {
+      // 5. Push all active local content items to Firestore
+      for (var item in localContents) {
         final docRef = firestore
             .collection('users')
             .doc(userId)
@@ -114,65 +113,13 @@ class SyncNotifier extends StateNotifier<SyncState> {
           'categoryId': item.categoryId,
           'createdAt': item.createdAt.toIso8601String(),
           'updatedAt': item.updatedAt.toIso8601String(),
-          'isDeleted': item.isDeleted,
+          'isDeleted': false,
         }, SetOptions(merge: true));
-      }
-
-      // Propagate any deletions to Firestore and remove locally
-      final deletedSyncedItems = await isarService.db.sharedContents
-          .filter()
-          .userIdEqualTo(userId)
-          .isDeletedEqualTo(true)
-          .findAll();
-
-      for (var delItem in deletedSyncedItems) {
-        final docRef = firestore
-            .collection('users')
-            .doc(userId)
-            .collection('shared_content')
-            .doc(delItem.id.toString());
-        batch.delete(docRef);
-        await isarService.db.writeTxn(
-          () => isarService.db.sharedContents.delete(delItem.id),
-        );
       }
 
       await batch.commit();
 
-      // Mark pushed items as successfully synced in local Isar DB
-      for (var item in allLocalItems) {
-        await isarService.markContentSynced(item.id, syncTimestamp);
-      }
-
-      // 5. Pull remote categories from Firestore (for restore / multi-device)
-      final remoteCatSnap = await firestore
-          .collection('users')
-          .doc(userId)
-          .collection('categories')
-          .get();
-
-      for (var doc in remoteCatSnap.docs) {
-        final data = doc.data();
-        final catId = data['id'] as int? ?? int.tryParse(doc.id) ?? 0;
-        if (catId > 0) {
-          final existing = await isarService.db.categorys.get(catId);
-          if (existing == null) {
-            final cat = Category()
-              ..id = catId
-              ..userId = userId
-              ..name = data['name'] ?? ''
-              ..colorHex = data['colorHex'] ?? '6366F1'
-              ..createdAt = DateTime.tryParse(data['createdAt'] ?? '') ??
-                  DateTime.now()
-              ..updatedAt = DateTime.tryParse(data['updatedAt'] ?? '') ??
-                  DateTime.now()
-              ..isDeleted = data['isDeleted'] ?? false;
-            await isarService.saveSyncedCategory(cat);
-          }
-        }
-      }
-
-      // 6. Pull remote content items from Firestore (for restore / multi-device)
+      // 6. Prune deleted items from Firestore: delete remote documents not in active local items
       final remoteContentSnap = await firestore
           .collection('users')
           .doc(userId)
@@ -180,31 +127,33 @@ class SyncNotifier extends StateNotifier<SyncState> {
           .get();
 
       for (var doc in remoteContentSnap.docs) {
-        final data = doc.data();
-        final contentId = data['id'] as int? ?? int.tryParse(doc.id) ?? 0;
-        if (contentId > 0) {
-          final existing = await isarService.db.sharedContents.get(contentId);
-          if (existing == null) {
-            final item = SharedContent()
-              ..id = contentId
-              ..userId = userId
-              ..rawUrl = data['rawUrl'] ?? ''
-              ..title = data['title'] ?? ''
-              ..thumbnailUrl = data['thumbnailUrl']
-              ..socmedSource = data['socmedSource'] ?? 'Other'
-              ..categoryId = data['categoryId'] ?? 0
-              ..createdAt = DateTime.tryParse(data['createdAt'] ?? '') ??
-                  DateTime.now()
-              ..updatedAt = DateTime.tryParse(data['updatedAt'] ?? '') ??
-                  DateTime.now()
-              ..syncedAt = DateTime.now()
-              ..isDeleted = data['isDeleted'] ?? false;
-            await isarService.saveSyncedContent(item);
-          }
+        final docId = int.tryParse(doc.id) ?? (doc.data()['id'] as int? ?? 0);
+        if (docId > 0 && !activeContentIds.contains(docId)) {
+          // Document was deleted locally -> delete it from Firestore!
+          await doc.reference.delete();
         }
       }
 
-      // 7. Refresh local UI states and counter
+      // Prune deleted categories from Firestore
+      final remoteCatSnap = await firestore
+          .collection('users')
+          .doc(userId)
+          .collection('categories')
+          .get();
+
+      for (var doc in remoteCatSnap.docs) {
+        final docId = int.tryParse(doc.id) ?? (doc.data()['id'] as int? ?? 0);
+        if (docId > 0 && !activeCategoryIds.contains(docId)) {
+          await doc.reference.delete();
+        }
+      }
+
+      // 7. Mark pushed items as successfully synced in local Isar DB
+      for (var item in localContents) {
+        await isarService.markContentSynced(item.id, syncTimestamp);
+      }
+
+      // 8. Refresh local UI states and counter
       ref.invalidate(categoryNotifierProvider);
       ref.invalidate(sharedContentNotifierProvider);
       ref.invalidate(unsyncedCountProvider);
