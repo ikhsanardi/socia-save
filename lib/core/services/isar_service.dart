@@ -100,11 +100,26 @@ class IsarService {
     });
   }
 
-  Future<void> updateSharedContent(SharedContent content) async {
+  Future<void> updateSharedContent(
+    SharedContent content, {
+    bool resetSynced = true,
+  }) async {
     content.updatedAt = DateTime.now();
-    content.syncedAt = null;
+    if (resetSynced) {
+      content.syncedAt = null;
+    }
     await _isar.writeTxn(() async {
       await _isar.sharedContents.put(content);
+    });
+  }
+
+  Future<void> markContentSynced(int contentId, DateTime syncedAt) async {
+    await _isar.writeTxn(() async {
+      final item = await _isar.sharedContents.get(contentId);
+      if (item != null) {
+        item.syncedAt = syncedAt;
+        await _isar.sharedContents.put(item);
+      }
     });
   }
 
@@ -112,19 +127,80 @@ class IsarService {
     await _isar.writeTxn(() async {
       final item = await _isar.sharedContents.get(contentId);
       if (item != null) {
-        item.isDeleted = true;
-        item.updatedAt = DateTime.now();
-        await _isar.sharedContents.put(item);
+        if (item.syncedAt == null) {
+          // Never uploaded to cloud: completely delete from local DB
+          await _isar.sharedContents.delete(contentId);
+        } else {
+          // Was uploaded to cloud: mark as deleted with reset syncedAt so cloud deletes it
+          item.isDeleted = true;
+          item.updatedAt = DateTime.now();
+          item.syncedAt = null;
+          await _isar.sharedContents.put(item);
+        }
       }
     });
   }
 
   // --- Unsynced Count for UI Badge ---
   Future<int> getUnsyncedCount(String userId) async {
+    // Purge any legacy soft-deleted items that were never synced
+    await _isar.writeTxn(() async {
+      final orphans = await _isar.sharedContents
+          .filter()
+          .isDeletedEqualTo(true)
+          .syncedAtIsNull()
+          .findAll();
+      for (var orphan in orphans) {
+        await _isar.sharedContents.delete(orphan.id);
+      }
+    });
+
     return await _isar.sharedContents
         .filter()
-        .userIdEqualTo(userId)
+        .group((q) => q.userIdEqualTo(userId).or().userIdEqualTo('local_user'))
+        .isDeletedEqualTo(false)
         .syncedAtIsNull()
         .count();
+  }
+
+  // --- User Data Migration ---
+  Future<void> migrateUserRecords({
+    required String fromUserId,
+    required String toUserId,
+  }) async {
+    if (fromUserId == toUserId) return;
+    await _isar.writeTxn(() async {
+      // 1. Migrate categories
+      final categories = await _isar.categorys
+          .filter()
+          .userIdEqualTo(fromUserId)
+          .findAll();
+      for (var cat in categories) {
+        cat.userId = toUserId;
+        await _isar.categorys.put(cat);
+      }
+
+      // 2. Migrate shared content items
+      final contents = await _isar.sharedContents
+          .filter()
+          .userIdEqualTo(fromUserId)
+          .findAll();
+      for (var item in contents) {
+        item.userId = toUserId;
+        await _isar.sharedContents.put(item);
+      }
+    });
+  }
+
+  Future<void> saveSyncedCategory(Category category) async {
+    await _isar.writeTxn(() async {
+      await _isar.categorys.put(category);
+    });
+  }
+
+  Future<void> saveSyncedContent(SharedContent content) async {
+    await _isar.writeTxn(() async {
+      await _isar.sharedContents.put(content);
+    });
   }
 }

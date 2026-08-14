@@ -346,7 +346,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(height: 8),
                               const Text(
-                                'Share a link from Instagram, Facebook, or Threads, or tap + to add manually.',
+                                'Share a link from any social media, or tap + to add manually.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Colors.grey),
                               ),
