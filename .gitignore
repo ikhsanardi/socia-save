@@ -1,0 +1,83 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+Thumbs.db
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Dart / Flutter files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+**/doc/api/
+
+# Android specific
+android/.gradle/
+android/local.properties
+android/app/build/
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/captures/
+android/key.properties
+android/**/*.apk
+android/**/*.aab
+**/GeneratedPluginRegistrant.java
+*.keystore
+*.jks
+google-services.json
+
+# iOS / macOS specific
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/.last_build_id
+GoogleService-Info.plist
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+*.xcuserstate
+*.ipa
+
+# Web specific
+web/flutter.js
+web/manifest.json
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Antigravity / AI artifacts (if generated locally)
+.antigravity/
+.gemini/
