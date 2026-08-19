@@ -9,12 +9,13 @@ class Category {
   @Index()
   late String userId;
 
-  @Index(unique: true)
+  @Index()
   late String name;
 
   late String colorHex;
   late DateTime createdAt;
   late DateTime updatedAt;
+  DateTime? syncedAt;
   late bool isDeleted;
 
   Category();
@@ -31,6 +32,7 @@ class Category {
       ..colorHex = colorHex
       ..createdAt = now
       ..updatedAt = now
+      ..syncedAt = null
       ..isDeleted = false;
   }
 }

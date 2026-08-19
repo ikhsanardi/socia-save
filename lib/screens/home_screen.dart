@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import '../models/category.dart';
+import '../providers/auth_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../providers/sync_provider.dart';
 import '../widgets/content_card.dart';
+import 'account_bottom_sheet.dart';
 import 'categories_screen.dart';
 import 'category_filter_modal.dart';
 import 'share_receiver_bottom_sheet.dart';
@@ -187,59 +189,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Sync Button with Unsynced Badge
               unsyncedCountAsync.when(
                 data: (count) {
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconButton(
-                        icon: syncState.status == SyncStatus.syncing
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.cloud_sync_rounded),
-                        tooltip: 'Sync with Cloud',
-                        onPressed: syncState.status == SyncStatus.syncing
-                            ? null
-                            : () async {
-                                await ref
-                                    .read(syncNotifierProvider.notifier)
-                                    .triggerSync();
-                                final state = ref.read(syncNotifierProvider);
-                                if (context.mounted && state.message != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(state.message!)),
-                                  );
-                                }
-                              },
+                  return Badge(
+                    label: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
-                      if (count > 0 && syncState.status != SyncStatus.syncing)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.amber,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '$count',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                    ),
+                    isLabelVisible:
+                        count > 0 && syncState.status != SyncStatus.syncing,
+                    backgroundColor: Colors.amber,
+                    textColor: Colors.black,
+                    offset: const Offset(-4, 4),
+                    child: IconButton(
+                      icon: syncState.status == SyncStatus.syncing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
                               ),
-                            ),
-                          ),
-                        ),
-                    ],
+                            )
+                          : const Icon(Icons.cloud_sync_rounded),
+                      tooltip: count > 0
+                          ? 'Sync with Cloud ($count unsynced)'
+                          : 'Sync with Cloud',
+                      onPressed: syncState.status == SyncStatus.syncing
+                          ? null
+                          : () async {
+                              final authUser =
+                                  ref.read(authStateProvider).valueOrNull;
+                              final isAnonymous =
+                                  authUser == null || authUser.isAnonymous;
+
+                              if (isAnonymous) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      count > 0
+                                          ? 'You have $count unsynced bookmark${count > 1 ? 's' : ''}. Sign in with Google to sync them to the cloud.'
+                                          : 'Sign in with Google to sync bookmarks across devices.',
+                                    ),
+                                    action: SnackBarAction(
+                                      label: 'Sign In',
+                                      onPressed: () =>
+                                          AccountBottomSheet.show(context),
+                                    ),
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              await ref
+                                  .read(syncNotifierProvider.notifier)
+                                  .triggerSync();
+                              final state = ref.read(syncNotifierProvider);
+                              if (context.mounted && state.message != null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(state.message!)),
+                                );
+                              }
+                            },
+                    ),
                   );
                 },
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
+                loading: () => const IconButton(
+                  icon: Icon(Icons.cloud_sync_rounded),
+                  onPressed: null,
+                ),
+                error: (_, _) => const IconButton(
+                  icon: Icon(Icons.cloud_sync_rounded),
+                  onPressed: null,
+                ),
               ),
 
               // Master Categories Screen Navigation Button
@@ -252,6 +275,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => const CategoriesScreen(),
                     ),
+                  );
+                },
+              ),
+
+              // Account & Cloud Backup Profile Button
+              Consumer(
+                builder: (context, ref, child) {
+                  final authUser = ref.watch(authStateProvider).valueOrNull;
+                  final isAnonymous = authUser == null || authUser.isAnonymous;
+                  final photoUrl = authUser?.photoURL;
+
+                  return IconButton(
+                    icon: photoUrl != null
+                        ? CircleAvatar(
+                            radius: 12,
+                            backgroundImage: NetworkImage(photoUrl),
+                          )
+                        : Icon(
+                            isAnonymous
+                                ? Icons.account_circle_outlined
+                                : Icons.account_circle_rounded,
+                            color: !isAnonymous
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                    tooltip: isAnonymous
+                        ? 'Account & Cloud Backup'
+                        : 'Account: ${authUser.displayName ?? authUser.email}',
+                    onPressed: () => AccountBottomSheet.show(context),
                   );
                 },
               ),
@@ -358,6 +410,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                     return RefreshIndicator(
                       onRefresh: () async {
+                        final authUser =
+                            ref.read(authStateProvider).valueOrNull;
+                        final isAnonymous =
+                            authUser == null || authUser.isAnonymous;
+                        if (!isAnonymous) {
+                          await ref
+                              .read(syncNotifierProvider.notifier)
+                              .triggerSync();
+                        }
                         await ref
                             .read(sharedContentNotifierProvider.notifier)
                             .loadContent();

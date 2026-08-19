@@ -82,7 +82,8 @@ class SharedContentNotifier
 
 final sharedContentNotifierProvider = StateNotifierProvider<
     SharedContentNotifier, AsyncValue<List<SharedContent>>>((ref) {
-  // Watch filter parameters to auto-reload list
+  // Watch userIdProvider and filter parameters to auto-reload content per user
+  ref.watch(userIdProvider);
   ref.watch(selectedCategoryIdProvider);
   ref.watch(searchQueryProvider);
   return SharedContentNotifier(ref);
@@ -92,5 +93,6 @@ final unsyncedCountProvider = FutureProvider<int>((ref) async {
   final isarService = ref.watch(isarServiceProvider);
   final userId = ref.watch(userIdProvider);
   ref.watch(sharedContentNotifierProvider);
+  ref.watch(categoryNotifierProvider);
   return isarService.getUnsyncedCount(userId);
 });

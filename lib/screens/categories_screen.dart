@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/category.dart';
 import '../providers/category_provider.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
@@ -119,6 +120,43 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     );
   }
 
+  void _showDeleteCategoryDialog(Category category) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Category'),
+        content: Text(
+          'Are you sure you want to delete "${category.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              await ref
+                  .read(categoryNotifierProvider.notifier)
+                  .deleteCategory(category.id);
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Category "${category.name}" deleted'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoryNotifierProvider);
@@ -158,11 +196,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                  onPressed: () {
-                    ref
-                        .read(categoryNotifierProvider.notifier)
-                        .deleteCategory(category.id);
-                  },
+                  tooltip: 'Delete Category',
+                  onPressed: () => _showDeleteCategoryDialog(category),
                 ),
               );
             },
