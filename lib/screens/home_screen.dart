@@ -410,15 +410,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                     return RefreshIndicator(
                       onRefresh: () async {
-                        final authUser =
-                            ref.read(authStateProvider).valueOrNull;
-                        final isAnonymous =
-                            authUser == null || authUser.isAnonymous;
-                        if (!isAnonymous) {
-                          await ref
-                              .read(syncNotifierProvider.notifier)
-                              .triggerSync();
-                        }
                         await ref
                             .read(sharedContentNotifierProvider.notifier)
                             .loadContent();

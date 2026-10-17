@@ -258,7 +258,7 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
         child: userAsync.when(
           data: (user) {
             final isAnonymous = user == null || user.isAnonymous;
@@ -270,134 +270,172 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header Profile Info
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                      backgroundImage:
-                          photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null
-                          ? Icon(
-                              isAnonymous
-                                  ? Icons.person_outline_rounded
-                                  : Icons.person_rounded,
-                              size: 32,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isAnonymous ? 'Guest Account' : displayName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            email,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.color
-                                  ?.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isAnonymous)
+                // Centered & Compact Header Profile Info
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
                         decoration: BoxDecoration(
-                          color: unsyncedCount > 0
-                              ? Colors.amber.withValues(alpha: 0.15)
-                              : Colors.green.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.25),
+                            width: 2,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: unsyncedCount > 0
-                                    ? Colors.amber.shade800
-                                    : Colors.green,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              unsyncedCount > 0
-                                  ? '$unsyncedCount Unsynced'
-                                  : 'Cloud Synced',
-                              style: TextStyle(
-                                color: unsyncedCount > 0
-                                    ? Colors.amber.shade900
-                                    : Colors.green,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primaryContainer,
+                          backgroundImage:
+                              (photoUrl != null && photoUrl.isNotEmpty)
+                                  ? NetworkImage(photoUrl)
+                                  : null,
+                          child: (photoUrl == null || photoUrl.isEmpty)
+                              ? (isAnonymous
+                                  ? Icon(
+                                      Icons.person_outline_rounded,
+                                      size: 30,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    )
+                                  : (displayName.isNotEmpty || email.isNotEmpty)
+                                      ? Text(
+                                          (displayName.isNotEmpty
+                                                  ? displayName[0]
+                                                  : email[0])
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.person_rounded,
+                                          size: 30,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer,
+                                        ))
+                              : null,
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        isAnonymous ? 'Guest Account' : displayName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withValues(alpha: 0.7),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (!isAnonymous) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: unsyncedCount > 0
+                                ? Colors.amber.withValues(alpha: 0.15)
+                                : Colors.green.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: unsyncedCount > 0
+                                      ? Colors.amber.shade800
+                                      : Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                unsyncedCount > 0
+                                    ? '$unsyncedCount Unsynced'
+                                    : 'Cloud Synced',
+                                style: TextStyle(
+                                  color: unsyncedCount > 0
+                                      ? Colors.amber.shade900
+                                      : Colors.green,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 20),
-                const Divider(),
                 const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
 
                 // Local DB Backup & Restore info note
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
                         .surfaceContainerHighest
                         .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
                         Icons.storage_rounded,
-                        size: 22,
+                        size: 20,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           isAnonymous
-                              ? 'Export your local database to keep a JSON backup or import bookmarks anytime. You can also sign in with Google to enable cloud sync.'
-                              : 'Export your local database to keep a JSON backup, or import an existing backup file to restore bookmarks.',
-                          style: const TextStyle(fontSize: 13, height: 1.35),
+                              ? 'Export your local database as a JSON backup or import bookmarks anytime. Sign in with Google to enable cloud sync.'
+                              : 'Export your local database as a JSON backup, or import an existing backup file to restore bookmarks.',
+                          style: const TextStyle(fontSize: 12, height: 1.35),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
                 // Action Buttons: Export & Import Local DB
                 Row(
@@ -405,32 +443,32 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _isLoading ? null : _handleExportLocalDb,
-                        icon: const Icon(Icons.upload_file_rounded, size: 20),
+                        icon: const Icon(Icons.upload_file_rounded, size: 18),
                         label: const Text(
                           'Export DB',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 11),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: _isLoading ? null : _handleImportLocalDb,
-                        icon: const Icon(Icons.file_download_rounded, size: 20),
+                        icon: const Icon(Icons.file_download_rounded, size: 18),
                         label: const Text(
                           'Import DB',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 11),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
@@ -438,7 +476,7 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
                 // Sign in with Google (Guest) or Sign Out (Authenticated)
                 if (isAnonymous) ...[
