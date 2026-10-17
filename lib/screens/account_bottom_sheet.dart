@@ -178,7 +178,9 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
       ref.invalidate(unsyncedCountProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               'Imported $contentCount bookmark${contentCount == 1 ? '' : 's'} and $catCount categor${catCount == 1 ? 'y' : 'ies'} successfully!',
