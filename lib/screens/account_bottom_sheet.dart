@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/database_provider.dart';
 import '../providers/shared_content_provider.dart';
+import '../widgets/user_avatar.dart';
 
 class AccountBottomSheet extends ConsumerStatefulWidget {
   const AccountBottomSheet({super.key});
@@ -264,9 +265,8 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
         child: userAsync.when(
           data: (user) {
             final isAnonymous = user == null || user.isAnonymous;
-            final displayName = user?.displayName ?? 'Guest User';
-            final email = user?.email ?? 'Guest Session (Offline)';
-            final photoUrl = user?.photoURL;
+            final displayName = UserAvatar.extractDisplayName(user) ?? 'Guest User';
+            final email = UserAvatar.extractEmail(user) ?? 'Guest Session (Offline)';
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -278,56 +278,15 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.25),
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer,
-                          backgroundImage:
-                              (photoUrl != null && photoUrl.isNotEmpty)
-                                  ? NetworkImage(photoUrl)
-                                  : null,
-                          child: (photoUrl == null || photoUrl.isEmpty)
-                              ? (isAnonymous
-                                  ? Icon(
-                                      Icons.person_outline_rounded,
-                                      size: 30,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer,
-                                    )
-                                  : (displayName.isNotEmpty || email.isNotEmpty)
-                                      ? Text(
-                                          (displayName.isNotEmpty
-                                                  ? displayName[0]
-                                                  : email[0])
-                                              .toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer,
-                                          ),
-                                        )
-                                      : Icon(
-                                          Icons.person_rounded,
-                                          size: 30,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimaryContainer,
-                                        ))
-                              : null,
+                      UserAvatar.fromUser(
+                        user: user,
+                        radius: 28,
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.25),
+                          width: 2,
                         ),
                       ),
                       const SizedBox(height: 8),

@@ -9,6 +9,7 @@ import '../providers/content_selection_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../providers/sync_provider.dart';
 import '../widgets/content_card.dart';
+import '../widgets/user_avatar.dart';
 import 'account_bottom_sheet.dart';
 import 'categories_screen.dart';
 import 'category_filter_modal.dart';
@@ -407,25 +408,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 builder: (context, ref, child) {
                   final authUser = ref.watch(authStateProvider).valueOrNull;
                   final isAnonymous = authUser == null || authUser.isAnonymous;
-                  final photoUrl = authUser?.photoURL;
-
                   return IconButton(
-                    icon: photoUrl != null
-                        ? CircleAvatar(
-                            radius: 12,
-                            backgroundImage: NetworkImage(photoUrl),
-                          )
-                        : Icon(
-                            isAnonymous
-                                ? Icons.account_circle_outlined
-                                : Icons.account_circle_rounded,
-                            color: !isAnonymous
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                          ),
+                    icon: UserAvatar.fromUser(
+                      user: authUser,
+                      radius: 13,
+                    ),
                     tooltip: isAnonymous
                         ? 'Account & Cloud Backup'
-                        : 'Account: ${authUser.displayName ?? authUser.email}',
+                        : 'Account: ${UserAvatar.extractDisplayName(authUser) ?? UserAvatar.extractEmail(authUser) ?? 'User'}',
                     onPressed: () => AccountBottomSheet.show(context),
                   );
                 },

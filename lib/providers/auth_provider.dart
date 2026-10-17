@@ -6,8 +6,40 @@ import 'category_provider.dart';
 import 'database_provider.dart';
 import 'shared_content_provider.dart';
 
-final authStateProvider = StreamProvider<User?>((ref) {
-  return FirebaseAuth.instance.authStateChanges();
+final authStateProvider = StreamProvider<User?>((ref) async* {
+  await for (final user in FirebaseAuth.instance.userChanges()) {
+    if (user != null && !user.isAnonymous) {
+      final hasNoPhoto = user.photoURL == null || user.photoURL!.isEmpty;
+      final hasNoName = user.displayName == null || user.displayName!.isEmpty;
+
+      if (hasNoPhoto || hasNoName) {
+        final providerPhoto = user.providerData
+            .where((p) => p.photoURL != null && p.photoURL!.isNotEmpty)
+            .map((p) => p.photoURL)
+            .firstOrNull;
+        final providerName = user.providerData
+            .where((p) => p.displayName != null && p.displayName!.isNotEmpty)
+            .map((p) => p.displayName)
+            .firstOrNull;
+
+        if ((hasNoPhoto && providerPhoto != null) ||
+            (hasNoName && providerName != null)) {
+          try {
+            if (hasNoPhoto && providerPhoto != null) {
+              await user.updatePhotoURL(providerPhoto);
+            }
+            if (hasNoName && providerName != null) {
+              await user.updateDisplayName(providerName);
+            }
+            await user.reload();
+          } catch (e) {
+            debugPrint('Failed to sync profile info in authStateProvider: $e');
+          }
+        }
+      }
+    }
+    yield user;
+  }
 });
 
 class AuthController {
@@ -72,6 +104,27 @@ class AuthController {
 
       final user = userCredential.user;
       if (user != null) {
+        // Sync profile details (photo and display name) from googleUser to Firebase user
+        final googlePhoto = googleUser.photoUrl;
+        final googleName = googleUser.displayName;
+
+        try {
+          bool needsReload = false;
+          if (user.photoURL == null && googlePhoto != null) {
+            await user.updatePhotoURL(googlePhoto);
+            needsReload = true;
+          }
+          if (user.displayName == null && googleName != null) {
+            await user.updateDisplayName(googleName);
+            needsReload = true;
+          }
+          if (needsReload) {
+            await user.reload();
+          }
+        } catch (e) {
+          debugPrint('Error syncing profile details to Firebase User: $e');
+        }
+
         final isarService = ref.read(isarServiceProvider);
 
         // Migrate guest records to the authenticated Google user account
