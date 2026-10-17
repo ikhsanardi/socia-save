@@ -5,6 +5,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import '../models/category.dart';
 import '../providers/auth_provider.dart';
 import '../providers/category_provider.dart';
+import '../providers/content_selection_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../providers/sync_provider.dart';
 import '../widgets/content_card.dart';
@@ -98,6 +99,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _showBatchDeleteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    List<int> idsToDelete,
+  ) {
+    final count = idsToDelete.length;
+    if (count == 0) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Items'),
+        content: Text(
+          'Are you sure you want to delete $count saved ${count == 1 ? 'item' : 'items'}? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref
+                    .read(sharedContentNotifierProvider.notifier)
+                    .deleteMultiple(idsToDelete);
+                ref.read(contentSelectionProvider.notifier).clear();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '$count ${count == 1 ? 'item' : 'items'} deleted',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete items: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Color _parseColor(String hexColor) {
     try {
       final hex = hexColor.replaceAll('#', '');
@@ -122,6 +180,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final syncState = ref.watch(syncNotifierProvider);
     final selectedCategoryId = ref.watch(selectedCategoryIdProvider);
     final categoriesAsync = ref.watch(categoryNotifierProvider);
+    final selectedContentIds = ref.watch(contentSelectionProvider);
+    final isSelectionMode = selectedContentIds.isNotEmpty;
+
+    // Clear selection if category filter or search query changes
+    ref.listen<int?>(selectedCategoryIdProvider, (prev, next) {
+      if (prev != next) {
+        ref.read(contentSelectionProvider.notifier).clear();
+      }
+    });
+    ref.listen<String>(searchQueryProvider, (prev, next) {
+      if (prev != next) {
+        ref.read(contentSelectionProvider.notifier).clear();
+      }
+    });
 
     Category? selectedCategory;
     if (selectedCategoryId != null) {
@@ -135,10 +207,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return PopScope(
-      canPop: !_searchFocusNode.hasFocus,
+      canPop: !isSelectionMode && !_searchFocusNode.hasFocus,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _searchFocusNode.hasFocus) {
-          _searchFocusNode.unfocus();
+        if (!didPop) {
+          if (isSelectionMode) {
+            ref.read(contentSelectionProvider.notifier).clear();
+          } else if (_searchFocusNode.hasFocus) {
+            _searchFocusNode.unfocus();
+          }
         }
       },
       child: GestureDetector(
@@ -149,8 +225,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }
         },
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Socia Save'),
+          appBar: isSelectionMode
+              ? AppBar(
+                  leading: IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'Cancel selection',
+                    onPressed: () {
+                      ref.read(contentSelectionProvider.notifier).clear();
+                    },
+                  ),
+                  title: Text(
+                    '${selectedContentIds.length} selected',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.checklist_rounded),
+                      tooltip: contentAsync.valueOrNull != null &&
+                              contentAsync.valueOrNull!.isNotEmpty &&
+                              contentAsync.valueOrNull!.every(
+                                (item) =>
+                                    selectedContentIds.contains(item.id),
+                              )
+                          ? 'Deselect All'
+                          : 'Select All',
+                      onPressed: () {
+                        final visibleItems = contentAsync.valueOrNull ?? [];
+                        final visibleIds =
+                            visibleItems.map((e) => e.id).toList();
+                        ref
+                            .read(contentSelectionProvider.notifier)
+                            .selectAll(visibleIds);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.red,
+                      ),
+                      tooltip: 'Delete selected',
+                      onPressed: () => _showBatchDeleteDialog(
+                        context,
+                        ref,
+                        selectedContentIds.toList(),
+                      ),
+                    ),
+                  ],
+                )
+              : AppBar(
+                  title: const Text('Socia Save'),
             actions: [
               // Category Filter Modal Button (To the left of Sync button)
               Stack(
@@ -432,11 +555,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: _showManualAddDialog,
-            icon: const Icon(Icons.add_link_rounded),
-            label: const Text('Add Link'),
-          ),
+          floatingActionButton: isSelectionMode
+              ? null
+              : FloatingActionButton.extended(
+                  onPressed: _showManualAddDialog,
+                  icon: const Icon(Icons.add_link_rounded),
+                  label: const Text('Add Link'),
+                ),
         ),
       ),
     );

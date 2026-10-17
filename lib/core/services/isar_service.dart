@@ -195,6 +195,22 @@ class IsarService {
     });
   }
 
+  Future<void> deleteMultipleSharedContents(List<int> contentIds) async {
+    if (contentIds.isEmpty) return;
+    final now = DateTime.now();
+    await _isar.writeTxn(() async {
+      for (final id in contentIds) {
+        final item = await _isar.sharedContents.get(id);
+        if (item != null) {
+          item.isDeleted = true;
+          item.syncedAt = null; // Unsynced deletion
+          item.updatedAt = now;
+          await _isar.sharedContents.put(item);
+        }
+      }
+    });
+  }
+
   Future<void> hardDeleteSharedContent(int contentId) async {
     await _isar.writeTxn(() async {
       await _isar.sharedContents.delete(contentId);

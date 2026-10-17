@@ -69,6 +69,16 @@ class SharedContentNotifier
     }
   }
 
+  Future<void> deleteMultiple(List<int> ids) async {
+    try {
+      final isarService = ref.read(isarServiceProvider);
+      await isarService.deleteMultipleSharedContents(ids);
+      await loadContent();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> updateContent(SharedContent item) async {
     try {
       final isarService = ref.read(isarServiceProvider);

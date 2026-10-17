@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/category.dart';
 import '../models/shared_content.dart';
 import '../providers/category_provider.dart';
+import '../providers/content_selection_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../screens/edit_content_bottom_sheet.dart';
 import 'socmed_icon.dart';
@@ -101,88 +102,162 @@ class ContentCard extends ConsumerWidget {
         ? _parseColor(category!.colorHex)
         : Colors.grey;
 
+    final isSelectionMode = ref.watch(
+      contentSelectionProvider.select((s) => s.isNotEmpty),
+    );
+    final isSelected = ref.watch(
+      contentSelectionProvider.select((s) => s.contains(item.id)),
+    );
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(13, 2, 13, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row: Socmed Icon + Source Name + Category Tag + Popup Menu
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isSelected
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              )
+            : BorderSide(
+                color: isSelectionMode
+                    ? Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.5)
+                    : Colors.transparent,
+                width: 1,
+              ),
+      ),
+      color: isSelected
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+          : null,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onLongPress: () {
+          HapticFeedback.lightImpact();
+          ref.read(contentSelectionProvider.notifier).toggle(item.id);
+        },
+        onTap: isSelectionMode
+            ? () {
+                ref.read(contentSelectionProvider.notifier).toggle(item.id);
+              }
+            : null,
+        child: IgnorePointer(
+          ignoring: isSelectionMode,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              13,
+              isSelectionMode ? 10 : 0,
+              13,
+              10,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SocmedIcon(source: item.socmedSource),
-                const SizedBox(width: 8),
-                Text(
-                  item.socmedSource,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                const Spacer(),
-                if (category != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      category!.name,
-                      style: TextStyle(
-                        color: categoryColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert_rounded, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      EditContentBottomSheet.show(context, item);
-                    } else if (value == 'delete') {
-                      _showDeleteDialog(context, ref);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit_outlined, size: 18),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_outline_rounded,
-                            color: Colors.red,
-                            size: 18,
+                // Header Row: [Checkbox if selection mode] + Socmed Icon + Source Name + Category Tag + [Popup Menu if not selection mode]
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (isSelectionMode)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        margin: const EdgeInsets.only(right: 8),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                            width: 2,
                           ),
-                          SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
-                        ],
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check_rounded,
+                                size: 14,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                    SocmedIcon(source: item.socmedSource),
+                    const SizedBox(width: 8),
+                    Text(
+                      item.socmedSource,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
+                    const Spacer(),
+                    if (category != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          category!.name,
+                          style: TextStyle(
+                            color: categoryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    if (!isSelectionMode)
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            EditContentBottomSheet.show(context, item);
+                          } else if (value == 'delete') {
+                            _showDeleteDialog(context, ref);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.red,
+                                  size: 18,
+                                ),
+                                SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
-              ],
-            ),
 
-            // Thumbnail Preview (If available)
+                if (isSelectionMode) const SizedBox(height: 10),
+
+                // Thumbnail Preview (If available)
             if (item.thumbnailUrl != null &&
                 item.thumbnailUrl!.trim().isNotEmpty) ...[
               ClipRRect(
@@ -258,6 +333,8 @@ class ContentCard extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

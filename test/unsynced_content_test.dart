@@ -74,6 +74,58 @@ void main() {
       final unsyncedCount = items.where((i) => i.syncedAt == null || i.isDeleted).length;
       expect(unsyncedCount, equals(2));
     });
+
+    test('Batch deletion marks items as deleted and flags them as unsynced', () {
+      final items = [
+        SharedContent.create(
+          userId: 'user_1',
+          rawUrl: 'https://x.com/post/1',
+          title: 'Post 1',
+          socmedSource: 'X',
+          categoryId: 1,
+        )..id = 101,
+        SharedContent.create(
+          userId: 'user_1',
+          rawUrl: 'https://x.com/post/2',
+          title: 'Post 2',
+          socmedSource: 'X',
+          categoryId: 1,
+        )
+          ..id = 102
+          ..syncedAt = DateTime.now(),
+        SharedContent.create(
+          userId: 'user_1',
+          rawUrl: 'https://x.com/post/3',
+          title: 'Post 3',
+          socmedSource: 'X',
+          categoryId: 1,
+        )
+          ..id = 103
+          ..syncedAt = DateTime.now(),
+      ];
+
+      // Simulate deleting items 101 and 103 via batch delete
+      final idsToDelete = [101, 103];
+      final now = DateTime.now();
+      for (final item in items) {
+        if (idsToDelete.contains(item.id)) {
+          item.isDeleted = true;
+          item.syncedAt = null;
+          item.updatedAt = now;
+        }
+      }
+
+      expect(items[0].isDeleted, isTrue);
+      expect(items[0].syncedAt, isNull);
+      expect(items[1].isDeleted, isFalse);
+      expect(items[1].syncedAt, isNotNull);
+      expect(items[2].isDeleted, isTrue);
+      expect(items[2].syncedAt, isNull);
+
+      final unsyncedPending =
+          items.where((i) => i.syncedAt == null || i.isDeleted).length;
+      expect(unsyncedPending, equals(2));
+    });
   });
 
   group('Local DB Export & Import Serialization Tests', () {
