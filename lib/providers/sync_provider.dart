@@ -125,7 +125,9 @@ class SyncNotifier extends StateNotifier<SyncState> {
       // B. Process Local Categories from Isar
       for (var localCat in localCategories) {
         if (localCat.isDeleted) {
-          localCategoriesToDeleteOnCloud.add(localCat);
+          if (localCat.syncedAt != null) {
+            localCategoriesToDeleteOnCloud.add(localCat);
+          }
           duplicateLocalIdsToDelete.add(localCat.id);
           continue;
         }
@@ -378,9 +380,11 @@ class SyncNotifier extends StateNotifier<SyncState> {
             .doc(item.id.toString());
 
         if (item.isDeleted) {
-          contentBatch.delete(docRef);
+          if (item.syncedAt != null) {
+            contentBatch.delete(docRef);
+            hasPushes = true;
+          }
           await isarService.hardDeleteSharedContent(item.id);
-          hasPushes = true;
         } else if (item.syncedAt == null ||
             item.updatedAt.isAfter(item.syncedAt!)) {
           var categoryId = item.categoryId;

@@ -107,11 +107,16 @@ class IsarService {
   Future<void> deleteCategory(int categoryId) async {
     final cat = await _isar.categorys.get(categoryId);
     if (cat == null) return;
-    cat.isDeleted = true;
-    cat.syncedAt = null; // Unsynced deletion
-    cat.updatedAt = DateTime.now();
     await _isar.writeTxn(() async {
-      await _isar.categorys.put(cat);
+      if (cat.syncedAt == null) {
+        // Never synced to cloud -> hard delete locally, no tombstone needed
+        await _isar.categorys.delete(categoryId);
+      } else {
+        // Was synced to cloud -> mark deleted so cloud sync removes it
+        cat.isDeleted = true;
+        cat.updatedAt = DateTime.now();
+        await _isar.categorys.put(cat);
+      }
     });
   }
 
@@ -187,11 +192,16 @@ class IsarService {
     final item = await _isar.sharedContents.get(contentId);
     if (item == null) return;
 
-    item.isDeleted = true;
-    item.syncedAt = null; // Unsynced deletion
-    item.updatedAt = DateTime.now();
     await _isar.writeTxn(() async {
-      await _isar.sharedContents.put(item);
+      if (item.syncedAt == null) {
+        // Never synced to cloud -> hard delete locally, no tombstone needed
+        await _isar.sharedContents.delete(contentId);
+      } else {
+        // Was synced to cloud -> mark deleted so cloud sync removes it
+        item.isDeleted = true;
+        item.updatedAt = DateTime.now();
+        await _isar.sharedContents.put(item);
+      }
     });
   }
 
@@ -202,10 +212,15 @@ class IsarService {
       for (final id in contentIds) {
         final item = await _isar.sharedContents.get(id);
         if (item != null) {
-          item.isDeleted = true;
-          item.syncedAt = null; // Unsynced deletion
-          item.updatedAt = now;
-          await _isar.sharedContents.put(item);
+          if (item.syncedAt == null) {
+            // Never synced to cloud -> hard delete locally
+            await _isar.sharedContents.delete(id);
+          } else {
+            // Was synced to cloud -> mark deleted for cloud sync
+            item.isDeleted = true;
+            item.updatedAt = now;
+            await _isar.sharedContents.put(item);
+          }
         }
       }
     });
@@ -219,16 +234,59 @@ class IsarService {
 
   // --- Unsynced Count for UI Badge ---
   Future<int> getUnsyncedCount(String userId) async {
+    // Clean up any legacy orphaned tombstones that were deleted locally before ever being synced
+    final orphanedContents = await _isar.sharedContents
+        .filter()
+        .userIdEqualTo(userId)
+        .isDeletedEqualTo(true)
+        .syncedAtIsNull()
+        .findAll();
+    if (orphanedContents.isNotEmpty) {
+      await _isar.writeTxn(() async {
+        for (final item in orphanedContents) {
+          await _isar.sharedContents.delete(item.id);
+        }
+      });
+    }
+
+    final orphanedCategories = await _isar.categorys
+        .filter()
+        .userIdEqualTo(userId)
+        .isDeletedEqualTo(true)
+        .syncedAtIsNull()
+        .findAll();
+    if (orphanedCategories.isNotEmpty) {
+      await _isar.writeTxn(() async {
+        for (final cat in orphanedCategories) {
+          await _isar.categorys.delete(cat.id);
+        }
+      });
+    }
+
     final unsyncedContent = await _isar.sharedContents
         .filter()
         .userIdEqualTo(userId)
-        .group((q) => q.syncedAtIsNull().or().isDeletedEqualTo(true))
+        .group((q) => q
+            .isDeletedEqualTo(false)
+            .and()
+            .syncedAtIsNull()
+            .or()
+            .isDeletedEqualTo(true)
+            .and()
+            .syncedAtIsNotNull())
         .count();
 
     final unsyncedCategories = await _isar.categorys
         .filter()
         .userIdEqualTo(userId)
-        .group((q) => q.syncedAtIsNull().or().isDeletedEqualTo(true))
+        .group((q) => q
+            .isDeletedEqualTo(false)
+            .and()
+            .syncedAtIsNull()
+            .or()
+            .isDeletedEqualTo(true)
+            .and()
+            .syncedAtIsNotNull())
         .count();
 
     return unsyncedContent + unsyncedCategories;
