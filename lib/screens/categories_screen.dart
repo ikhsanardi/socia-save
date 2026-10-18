@@ -11,6 +11,8 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
+  static const Color _maroonColor = Color(0xFF881337);
+
   final List<String> _colors = [
     '6366F1', // Indigo
     'EF4444', // Red
@@ -166,8 +168,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+              backgroundColor: _maroonColor,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -271,17 +273,17 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
               final color = _parseColor(category.colorHex);
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.only(bottom: 6),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
                     color: Theme.of(context)
                         .colorScheme
@@ -291,45 +293,56 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   child: Row(
                     children: [
+                      // Compact color display with glow effect matching category selection
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 20,
+                        height: 20,
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.16),
+                          color: color,
                           shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 1.8,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.45),
+                              blurRadius: 5,
+                              spreadRadius: 0.5,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           category.name,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(
-                          Icons.delete_outline_rounded,
-                          color: Theme.of(context).colorScheme.error,
-                          size: 20,
+                        icon: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: _maroonColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: _maroonColor,
+                            size: 16,
+                          ),
                         ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         tooltip: 'Delete Category',
                         onPressed: () => _showDeleteCategoryDialog(category),
                       ),

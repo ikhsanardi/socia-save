@@ -329,10 +329,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     isLabelVisible:
                         count > 0 && syncState.status != SyncStatus.syncing,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.tertiaryContainer,
-                    textColor:
-                        Theme.of(context).colorScheme.onTertiaryContainer,
+                    backgroundColor: Colors.amber,
+                    textColor: Colors.black,
                     offset: const Offset(-4, 4),
                     child: IconButton(
                       icon: syncState.status == SyncStatus.syncing
@@ -434,16 +432,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               // Search Input Bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
                 child: TextField(
                   controller: _searchController,
                   focusNode: _searchFocusNode,
                   decoration: InputDecoration(
                     hintText: 'Search saved links or titles...',
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear_rounded),
+                            icon: const Icon(Icons.clear_rounded, size: 18),
                             onPressed: () {
                               _searchController.clear();
                               _searchFocusNode.unfocus();
@@ -451,9 +449,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                           )
                         : null,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onChanged: (val) {
@@ -465,13 +467,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Active Category Filter Indicator Chip
               if (selectedCategoryId != null && selectedCategory != null) ...[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
                   child: Row(
                     children: [
                       InputChip(
                         avatar: Container(
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           decoration: BoxDecoration(
                             color: _parseColor(selectedCategory!.colorHex),
                             shape: BoxShape.circle,
@@ -479,9 +481,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         label: Text(
                           selectedCategory!.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
                         ),
-                        deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 0,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        deleteIcon: const Icon(Icons.close_rounded, size: 14),
                         onDeleted: () {
                           ref.read(selectedCategoryIdProvider.notifier).state =
                               null;
@@ -537,6 +547,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                       child: ListView.builder(
                         itemCount: items.length,
+                        padding: const EdgeInsets.only(bottom: 76),
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
                         itemBuilder: (context, index) {

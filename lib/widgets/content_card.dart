@@ -122,10 +122,10 @@ class ContentCard extends ConsumerWidget {
     );
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         side: isSelected
             ? BorderSide(
                 color: Theme.of(context).colorScheme.primary,
@@ -162,10 +162,10 @@ class ContentCard extends ConsumerWidget {
           ignoring: isSelectionMode,
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              14,
-              isSelectionMode ? 12 : 4,
-              14,
               12,
+              isSelectionMode ? 8 : 2,
+              12,
+              8,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +177,9 @@ class ContentCard extends ConsumerWidget {
                     if (isSelectionMode)
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.only(right: 8),
-                        width: 22,
-                        height: 22,
+                        margin: const EdgeInsets.only(right: 6),
+                        width: 20,
+                        height: 20,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isSelected
@@ -195,18 +195,22 @@ class ContentCard extends ConsumerWidget {
                         child: isSelected
                             ? const Icon(
                                 Icons.check_rounded,
-                                size: 14,
+                                size: 12,
                                 color: Colors.white,
                               )
                             : null,
                       ),
-                    SocmedIcon(source: effectiveSource, url: item.rawUrl),
-                    const SizedBox(width: 8),
+                    SocmedIcon(
+                      source: effectiveSource,
+                      url: item.rawUrl,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
                       effectiveSource,
                       style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -214,26 +218,26 @@ class ContentCard extends ConsumerWidget {
                     if (category != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
+                          horizontal: 7,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: categoryColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           category!.name,
                           style: TextStyle(
                             color: categoryColor,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     if (!isSelectionMode)
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, size: 20),
-                        padding: const EdgeInsets.all(4),
+                        icon: const Icon(Icons.more_vert_rounded, size: 18),
+                        padding: const EdgeInsets.all(2),
                         constraints: const BoxConstraints(),
                         onSelected: (value) {
                           if (value == 'edit') {
@@ -277,27 +281,27 @@ class ContentCard extends ConsumerWidget {
                   ],
                 ),
 
-                if (isSelectionMode) const SizedBox(height: 10),
+                if (isSelectionMode) const SizedBox(height: 6),
 
                 // Thumbnail Preview (If available)
                 if (item.thumbnailUrl != null &&
                     item.thumbnailUrl!.trim().isNotEmpty) ...[
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     child: Image.network(
                       item.thumbnailUrl!,
-                      height: 130,
+                      height: 105,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        height: 90,
+                        height: 75,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Theme.of(context)
                               .colorScheme
                               .surfaceContainerHighest
                               .withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Center(
                           child: Icon(
@@ -306,28 +310,28 @@ class ContentCard extends ConsumerWidget {
                                 .colorScheme
                                 .onSurfaceVariant
                                 .withValues(alpha: 0.5),
-                            size: 26,
+                            size: 22,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                 ],
 
                 // Content Title
                 Text(
                   item.title,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    height: 1.3,
+                    height: 1.25,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // Action Row: Copy Link & Open Link
                 Row(
@@ -335,33 +339,33 @@ class ContentCard extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _copyToClipboard(context, item.rawUrl),
-                        icon: const Icon(Icons.copy_rounded, size: 16),
+                        icon: const Icon(Icons.copy_rounded, size: 14),
                         label: const Text('Copy Link'),
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 7),
                           textStyle: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: () => _launchUrl(context, item.rawUrl),
-                        icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                        icon: const Icon(Icons.open_in_new_rounded, size: 14),
                         label: const Text('Open App'),
                         style: FilledButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 7),
                           textStyle: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
