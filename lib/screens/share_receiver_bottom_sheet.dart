@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/opengraph_service.dart';
 import '../providers/category_provider.dart';
 import '../providers/shared_content_provider.dart';
+import '../widgets/app_modal_header.dart';
 import '../widgets/socmed_icon.dart';
 
 class ShareReceiverBottomSheet extends ConsumerStatefulWidget {
@@ -51,6 +53,51 @@ class _ShareReceiverBottomSheetState
     }
   }
 
+  void _showQuickAddCategory(BuildContext context) {
+    final catController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        insetPadding: AppModalHeader.dialogInsetPadding,
+        titlePadding: AppModalHeader.dialogTitlePadding,
+        contentPadding: AppModalHeader.dialogContentPadding,
+        actionsPadding: AppModalHeader.dialogActionsPadding,
+        title: const AppModalHeader(
+          icon: Icons.category_outlined,
+          title: 'Add Category',
+        ),
+        content: TextField(
+          controller: catController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Category Name (e.g. Recipes, Tech)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = catController.text.trim();
+              if (name.isNotEmpty) {
+                await ref
+                    .read(categoryNotifierProvider.notifier)
+                    .addCategory(name, '6366F1');
+                if (ctx.mounted) Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -90,27 +137,19 @@ class _ShareReceiverBottomSheetState
           const SizedBox(height: 16),
 
           // Title Header
-          Row(
-            children: [
-              const Icon(Icons.bookmark_add_outlined, size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Save Shared Content',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (_ogData != null)
-                SocmedIcon(
-                  source: _ogData!.socmedSource,
-                  url: _ogData!.rawUrl,
-                ),
-            ],
+          AppModalHeader(
+            icon: Icons.bookmark_add_outlined,
+            title: 'Save Shared Content',
+            titleStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            trailing: _ogData != null
+                ? SocmedIcon(
+                    source: _ogData!.socmedSource,
+                    url: _ogData!.rawUrl,
+                  )
+                : null,
           ),
           const SizedBox(height: 16),
 
@@ -133,12 +172,27 @@ class _ShareReceiverBottomSheetState
                 _ogData!.thumbnailUrl!.isNotEmpty) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  _ogData!.thumbnailUrl!,
+                child: CachedNetworkImage(
+                  imageUrl: _ogData!.thumbnailUrl!,
                   height: 120,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  placeholder: (context, url) => Container(
+                    height: 120,
+                    width: double.infinity,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -162,13 +216,59 @@ class _ShareReceiverBottomSheetState
             categoriesAsync.when(
               data: (categories) {
                 if (categories.isEmpty) {
-                  return Text(
-                    'No categories available. Create one in Master Categories.',
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'No categories yet',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        FilledButton.tonalIcon(
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          icon: const Icon(Icons.add_rounded, size: 16),
+                          label: const Text('Add Category'),
+                          onPressed: () => _showQuickAddCategory(context),
+                        ),
+                      ],
+                    ),
                   );
                 }
 
-                _selectedCategoryId ??= categories.first.id;
+                if (_selectedCategoryId == null ||
+                    !categories.any((c) => c.id == _selectedCategoryId)) {
+                  _selectedCategoryId = categories.first.id;
+                }
 
                 return DropdownButtonFormField<int>(
                   initialValue: _selectedCategoryId,

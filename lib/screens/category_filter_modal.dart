@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/category_provider.dart';
+import '../widgets/app_modal_header.dart';
 
 class CategoryFilterModal extends ConsumerWidget {
   const CategoryFilterModal({super.key});
@@ -57,31 +58,22 @@ class CategoryFilterModal extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // Modal Header Row
-          Row(
-            children: [
-              const Icon(Icons.filter_list_rounded, size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Filter by Category',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (selectedCategoryId != null) ...[
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () {
-                    ref.read(selectedCategoryIdProvider.notifier).state = null;
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Clear Filter'),
-                ),
-              ],
-            ],
+          AppModalHeader(
+            icon: Icons.filter_list_rounded,
+            title: 'Filter by Category',
+            titleStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            trailing: selectedCategoryId != null
+                ? TextButton(
+                    onPressed: () {
+                      ref.read(selectedCategoryIdProvider.notifier).state = null;
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Clear Filter'),
+                  )
+                : null,
           ),
           const SizedBox(height: 12),
 

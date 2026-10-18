@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/shared_content.dart';
 import '../providers/category_provider.dart';
 import '../providers/shared_content_provider.dart';
+import '../widgets/app_modal_header.dart';
 import '../widgets/socmed_icon.dart';
 
 class EditContentBottomSheet extends ConsumerStatefulWidget {
@@ -131,26 +133,17 @@ class _EditContentBottomSheetState
           const SizedBox(height: 16),
 
           // Header: Title & Socmed Icon
-          Row(
-            children: [
-              const Icon(Icons.edit_note_rounded, size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Edit Saved Content',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SocmedIcon(
-                source: widget.item.socmedSource,
-                url: widget.item.rawUrl,
-              ),
-            ],
+          AppModalHeader(
+            icon: Icons.edit_note_rounded,
+            title: 'Edit Saved Content',
+            titleStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            trailing: SocmedIcon(
+              source: widget.item.socmedSource,
+              url: widget.item.rawUrl,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -159,12 +152,27 @@ class _EditContentBottomSheetState
               widget.item.thumbnailUrl!.trim().isNotEmpty) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                widget.item.thumbnailUrl!,
+              child: CachedNetworkImage(
+                imageUrl: widget.item.thumbnailUrl!,
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                placeholder: (context, url) => Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withValues(alpha: 0.3),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+                errorWidget: (_, _, _) => const SizedBox.shrink(),
               ),
             ),
             const SizedBox(height: 12),

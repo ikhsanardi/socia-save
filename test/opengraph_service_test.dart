@@ -53,4 +53,38 @@ void main() {
       );
     });
   });
+
+  group('OpenGraphService oEmbed Endpoint Tests', () {
+    test('Resolves YouTube oEmbed endpoint', () {
+      final endpoint = OpenGraphService.getOEmbedEndpoint(
+        'https://youtu.be/dQw4w9WgXcQ',
+        'YouTube',
+      );
+      expect(endpoint, contains('youtube.com/oembed'));
+      expect(endpoint, contains('format=json'));
+    });
+
+    test('Resolves TikTok oEmbed endpoint', () {
+      final endpoint = OpenGraphService.getOEmbedEndpoint(
+        'https://www.tiktok.com/@user/video/12345',
+        'TikTok',
+      );
+      expect(endpoint, contains('tiktok.com/oembed'));
+    });
+
+    test('Resolves X / Twitter oEmbed endpoint', () {
+      final endpoint = OpenGraphService.getOEmbedEndpoint(
+        'https://x.com/flutterdev/status/123',
+        'X',
+      );
+      expect(endpoint, contains('publish.twitter.com/oembed'));
+    });
+
+    test('Returns null for unsupported oEmbed platforms', () {
+      expect(
+        OpenGraphService.getOEmbedEndpoint('https://instagram.com/p/1', 'Instagram'),
+        isNull,
+      );
+    });
+  });
 }

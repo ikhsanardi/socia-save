@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/database_provider.dart';
 import '../providers/shared_content_provider.dart';
+import '../widgets/app_modal_header.dart';
 import '../widgets/user_avatar.dart';
 
 class AccountBottomSheet extends ConsumerStatefulWidget {
@@ -74,26 +75,14 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            insetPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-            contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-            actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Sign In Error',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            insetPadding: AppModalHeader.dialogInsetPadding,
+            titlePadding: AppModalHeader.dialogTitlePadding,
+            contentPadding: AppModalHeader.dialogContentPadding,
+            actionsPadding: AppModalHeader.dialogActionsPadding,
+            title: AppModalHeader(
+              icon: Icons.error_outline_rounded,
+              title: 'Sign In Error',
+              iconColor: Theme.of(context).colorScheme.error,
             ),
             content: Text(
               errorMsg.startsWith('Exception: ')
@@ -225,26 +214,14 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        title: Row(
-          children: [
-            Icon(
-              Icons.logout_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Sign Out',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        insetPadding: AppModalHeader.dialogInsetPadding,
+        titlePadding: AppModalHeader.dialogTitlePadding,
+        contentPadding: AppModalHeader.dialogContentPadding,
+        actionsPadding: AppModalHeader.dialogActionsPadding,
+        title: AppModalHeader(
+          icon: Icons.logout_rounded,
+          title: 'Sign Out',
+          iconColor: Theme.of(context).colorScheme.error,
         ),
         content: const Text(
           'Are you sure you want to sign out? Your bookmarks will remain safely stored in your Google Cloud account.',

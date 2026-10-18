@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 
@@ -23,6 +24,73 @@ class OpenGraphService {
         'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
   };
+
+  static String? getOEmbedEndpoint(String url, String source) {
+    final encodedUrl = Uri.encodeComponent(url);
+    switch (source) {
+      case 'YouTube':
+        return 'https://www.youtube.com/oembed?url=$encodedUrl&format=json';
+      case 'TikTok':
+        return 'https://www.tiktok.com/oembed?url=$encodedUrl';
+      case 'X':
+        return 'https://publish.twitter.com/oembed?url=$encodedUrl&omit_script=true';
+      case 'Reddit':
+        return 'https://www.reddit.com/oembed?url=$encodedUrl';
+      default:
+        return null;
+    }
+  }
+
+  static Future<OpenGraphData?> _fetchFromOEmbed(
+    String targetUrl,
+    String socmedSource,
+  ) async {
+    final endpoint = getOEmbedEndpoint(targetUrl, socmedSource);
+    if (endpoint == null) return null;
+
+    try {
+      final response = await http
+          .get(Uri.parse(endpoint), headers: {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        String? title = data['title'] as String?;
+        String? thumbnail = data['thumbnail_url'] as String?;
+        final author = data['author_name'] as String?;
+
+        // Fallback for X/Twitter where title might be empty but author/html exist
+        if ((title == null || title.trim().isEmpty) && author != null && author.isNotEmpty) {
+          final html = data['html'] as String? ?? '';
+          final textMatch = RegExp(r'<p[^>]*>(.*?)</p>').firstMatch(html);
+          if (textMatch != null) {
+            final rawParagraph = textMatch
+                .group(1)!
+                .replaceAll(RegExp(r'<[^>]*>'), '')
+                .replaceAll('&quot;', '"')
+                .replaceAll('&amp;', '&')
+                .trim();
+            if (rawParagraph.isNotEmpty) {
+              title = '$author: $rawParagraph';
+            }
+          }
+          title ??= 'Post by $author on X';
+        }
+
+        if (title != null && title.trim().isNotEmpty) {
+          return OpenGraphData(
+            title: title.trim(),
+            thumbnailUrl: thumbnail,
+            socmedSource: socmedSource,
+            rawUrl: targetUrl,
+          );
+        }
+      }
+    } catch (_) {
+      // Graceful fallback to HTML scraper on error or timeout
+    }
+    return null;
+  }
 
   static String detectSource(String url) {
     final lowerUrl = url.toLowerCase();
@@ -97,6 +165,12 @@ class OpenGraphService {
   static Future<OpenGraphData> fetchMetadata(String inputUrl) async {
     final targetUrl = extractUrl(inputUrl);
     final socmedSource = detectSource(targetUrl);
+
+    // 1. Try fast & high-reliability oEmbed endpoints first (YouTube, TikTok, X, Reddit)
+    final oEmbedData = await _fetchFromOEmbed(targetUrl, socmedSource);
+    if (oEmbedData != null) {
+      return oEmbedData;
+    }
 
     String fallbackTitle = targetUrl;
     try {

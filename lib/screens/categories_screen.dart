@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/category.dart';
 import '../providers/category_provider.dart';
+import '../widgets/app_modal_header.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -101,22 +102,13 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           ];
 
           return AlertDialog(
-            insetPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+            insetPadding: AppModalHeader.dialogInsetPadding,
+            titlePadding: AppModalHeader.dialogTitlePadding,
             contentPadding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
-            actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-            title: const Row(
-              children: [
-                Icon(Icons.palette_outlined, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Custom Color Picker',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            actionsPadding: AppModalHeader.dialogActionsPadding,
+            title: const AppModalHeader(
+              icon: Icons.palette_outlined,
+              title: 'Custom Color Picker',
             ),
             content: SizedBox(
               width: double.maxFinite,
@@ -366,22 +358,13 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-              contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-              actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-              title: const Row(
-                children: [
-                  Icon(Icons.category_outlined, size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Add Master Category',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              insetPadding: AppModalHeader.dialogInsetPadding,
+              titlePadding: AppModalHeader.dialogTitlePadding,
+              contentPadding: AppModalHeader.dialogContentPadding,
+              actionsPadding: AppModalHeader.dialogActionsPadding,
+              title: const AppModalHeader(
+                icon: Icons.category_outlined,
+                title: 'Add Master Category',
               ),
               content: SizedBox(
                 width: double.maxFinite,
@@ -589,26 +572,14 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        title: const Row(
-          children: [
-            Icon(
-              Icons.delete_outline_rounded,
-              size: 20,
-              color: _maroonColor,
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Delete Category',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        insetPadding: AppModalHeader.dialogInsetPadding,
+        titlePadding: AppModalHeader.dialogTitlePadding,
+        contentPadding: AppModalHeader.dialogContentPadding,
+        actionsPadding: AppModalHeader.dialogActionsPadding,
+        title: const AppModalHeader(
+          icon: Icons.delete_outline_rounded,
+          title: 'Delete Category',
+          iconColor: _maroonColor,
         ),
         content: Text(
           'Are you sure you want to delete "${category.name}"?',

@@ -190,22 +190,6 @@ class SyncNotifier extends StateNotifier<SyncState> {
         usedIds.add(cat.id);
       }
 
-      // D. If user has NO categories remotely AND locally, seed defaults for this user
-      if (canonicalByName.isEmpty) {
-        final defaultCategories = [
-          Category.create(userId: userId, name: 'General', colorHex: '6366F1'),
-          Category.create(userId: userId, name: 'Recipes', colorHex: 'EF4444'),
-          Category.create(userId: userId, name: 'Tech', colorHex: '3B82F6'),
-          Category.create(userId: userId, name: 'Travel', colorHex: '10B981'),
-          Category.create(userId: userId, name: 'Design', colorHex: '8B5CF6'),
-        ];
-        for (var cat in defaultCategories) {
-          final id = await isarService.addCategory(cat);
-          cat.id = id;
-          canonicalByName[cat.name.trim().toLowerCase()] = cat;
-          categoriesToPushRemote.add(cat.id);
-        }
-      }
 
       // E. Clean up local duplicate / deleted categories in Isar
       for (var dupId in duplicateLocalIdsToDelete) {

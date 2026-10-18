@@ -17,11 +17,6 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
       final isarService = ref.read(isarServiceProvider);
       final userId = ref.read(userIdProvider);
       
-      // Only seed default categories for guest / local_user mode
-      if (userId == 'local_user') {
-        await isarService.seedDefaultCategoriesIfNeeded(userId);
-      }
-
       final categories = await isarService.getAllCategories(userId);
       state = AsyncValue.data(categories);
     } catch (e, st) {

@@ -8,6 +8,7 @@ import '../providers/category_provider.dart';
 import '../providers/content_selection_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../providers/sync_provider.dart';
+import '../widgets/app_modal_header.dart';
 import '../widgets/content_card.dart';
 import '../widgets/user_avatar.dart';
 import 'account_bottom_sheet.dart';
@@ -26,6 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   StreamSubscription? _intentDataStreamSubscription;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -70,22 +72,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-          contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-          title: const Row(
-            children: [
-              Icon(Icons.add_link_rounded, size: 20),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Add Content Link',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          insetPadding: AppModalHeader.dialogInsetPadding,
+          titlePadding: AppModalHeader.dialogTitlePadding,
+          contentPadding: AppModalHeader.dialogContentPadding,
+          actionsPadding: AppModalHeader.dialogActionsPadding,
+          title: const AppModalHeader(
+            icon: Icons.add_link_rounded,
+            title: 'Add Content Link',
           ),
           content: TextField(
             controller: textController,
@@ -127,26 +120,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        title: Row(
-          children: [
-            Icon(
-              Icons.delete_sweep_outlined,
-              size: 20,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Delete Items',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        insetPadding: AppModalHeader.dialogInsetPadding,
+        titlePadding: AppModalHeader.dialogTitlePadding,
+        contentPadding: AppModalHeader.dialogContentPadding,
+        actionsPadding: AppModalHeader.dialogActionsPadding,
+        title: AppModalHeader(
+          icon: Icons.delete_sweep_outlined,
+          title: 'Delete Items',
+          iconColor: Theme.of(context).colorScheme.error,
         ),
         content: Text(
           'Are you sure you want to delete $count saved ${count == 1 ? 'item' : 'items'}? This cannot be undone.',
@@ -207,26 +188,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-          contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-          title: Row(
-            children: [
-              Icon(
-                Icons.cloud_sync_rounded,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Sign in to Sync',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          insetPadding: AppModalHeader.dialogInsetPadding,
+          titlePadding: AppModalHeader.dialogTitlePadding,
+          contentPadding: AppModalHeader.dialogContentPadding,
+          actionsPadding: AppModalHeader.dialogActionsPadding,
+          title: AppModalHeader(
+            icon: Icons.cloud_sync_rounded,
+            title: 'Sign in to Sync',
+            iconColor: Theme.of(context).colorScheme.primary,
           ),
           content: const Text(
             'Sign in with Google to back up and restore your saved bookmarks across all your devices.',
@@ -311,8 +280,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 280), () {
+      if (mounted) {
+        ref.read(searchQueryProvider.notifier).state = query;
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _intentDataStreamSubscription?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -570,6 +549,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onPressed: () {
                               _searchController.clear();
                               _searchFocusNode.unfocus();
+                              _searchDebounce?.cancel();
                               ref.read(searchQueryProvider.notifier).state = '';
                             },
                           )
@@ -583,9 +563,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onChanged: (val) {
-                    ref.read(searchQueryProvider.notifier).state = val;
-                  },
+                  onChanged: _onSearchChanged,
                 ),
               ),
 

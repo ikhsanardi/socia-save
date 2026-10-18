@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../providers/category_provider.dart';
 import '../providers/content_selection_provider.dart';
 import '../providers/shared_content_provider.dart';
 import '../screens/edit_content_bottom_sheet.dart';
+import 'app_modal_header.dart';
 import 'socmed_icon.dart';
 
 class ContentCard extends ConsumerWidget {
@@ -60,26 +62,14 @@ class ContentCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        title: Row(
-          children: [
-            Icon(
-              Icons.delete_outline_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Delete Content',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        insetPadding: AppModalHeader.dialogInsetPadding,
+        titlePadding: AppModalHeader.dialogTitlePadding,
+        contentPadding: AppModalHeader.dialogContentPadding,
+        actionsPadding: AppModalHeader.dialogActionsPadding,
+        title: AppModalHeader(
+          icon: Icons.delete_outline_rounded,
+          title: 'Delete Content',
+          iconColor: Theme.of(context).colorScheme.error,
         ),
         content: const Text('Are you sure you want to delete this saved link?'),
         actions: [
@@ -308,12 +298,27 @@ class ContentCard extends ConsumerWidget {
                     item.thumbnailUrl!.trim().isNotEmpty) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      item.thumbnailUrl!,
+                    child: CachedNetworkImage(
+                      imageUrl: item.thumbnailUrl!,
                       height: 105,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      placeholder: (context, url) => Container(
+                        height: 105,
+                        width: double.infinity,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
                         height: 75,
                         width: double.infinity,
                         decoration: BoxDecoration(

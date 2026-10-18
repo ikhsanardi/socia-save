@@ -17,31 +17,10 @@ class IsarService {
       directory: dir.path,
       name: 'socmed_share_saver_db',
     );
-
-    // Seed default categories for guest/initial user if needed
-    await seedDefaultCategoriesIfNeeded('local_user');
   }
 
   Future<void> seedDefaultCategoriesIfNeeded(String userId) async {
-    final count = await _isar.categorys
-        .filter()
-        .userIdEqualTo(userId)
-        .isDeletedEqualTo(false)
-        .count();
-
-    if (count == 0) {
-      final defaultCategories = [
-        Category.create(userId: userId, name: 'General', colorHex: '6366F1'),
-        Category.create(userId: userId, name: 'Recipes', colorHex: 'EF4444'),
-        Category.create(userId: userId, name: 'Tech', colorHex: '3B82F6'),
-        Category.create(userId: userId, name: 'Travel', colorHex: '10B981'),
-        Category.create(userId: userId, name: 'Design', colorHex: '8B5CF6'),
-      ];
-
-      await _isar.writeTxn(() async {
-        await _isar.categorys.putAll(defaultCategories);
-      });
-    }
+    // Default categories removed per user preference - categories start empty
   }
 
   // --- Category Operations ---
@@ -410,7 +389,7 @@ class IsarService {
                 'thumbnailUrl': item.thumbnailUrl,
                 'socmedSource': item.socmedSource,
                 'categoryId': item.categoryId,
-                'categoryName': catMap[item.categoryId] ?? 'General',
+                'categoryName': catMap[item.categoryId] ?? 'Uncategorized',
                 'createdAt': item.createdAt.toIso8601String(),
                 'updatedAt': item.updatedAt.toIso8601String(),
               })

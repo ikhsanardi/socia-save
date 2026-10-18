@@ -1,9 +1,17 @@
-# Miscellaneous
+# Miscellaneous / OS
 *.class
 *.log
 *.pyc
 *.swp
+*.swo
+*~
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
 .atom/
 .build/
 .buildlog/
@@ -11,7 +19,6 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-Thumbs.db
 
 # IDE & Editor files
 .idea/
@@ -19,6 +26,19 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
+.fleet/
+.zed/
+
+# Environment & Secrets
+.env
+.env.*
+*.env
+!*.env.example
+*.pem
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
 # Dart / Flutter files
 .dart_tool/
@@ -27,12 +47,29 @@ Thumbs.db
 .packages
 .pub-cache/
 .pub/
+.flutter-devtools/
 build/
 coverage/
 **/doc/api/
+flutter_*.log
+
+# Local Databases & Storage
+*.isar
+*.isar.lock
+*.isar.management
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 # Android specific
+**/.gradle/
 android/.gradle/
+android/.kotlin/
+**/.kotlin/
+android/.cxx/
+**/.cxx/
 android/local.properties
 android/app/build/
 android/app/debug/
@@ -40,16 +77,23 @@ android/app/profile/
 android/app/release/
 android/captures/
 android/key.properties
+**/key.properties
 android/**/*.apk
 android/**/*.aab
 **/GeneratedPluginRegistrant.java
 *.keystore
 *.jks
 google-services.json
+**/google-services.json
+*.hprof
 
 # iOS / macOS specific
 ios/Pods/
+**/Pods/
 ios/.symlinks/
+**/.symlinks/
+ios/Flutter/ephemeral/
+**/Flutter/ephemeral/
 ios/Flutter/App.framework
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
@@ -62,22 +106,35 @@ ios/ServiceDefinitions.json
 ios/Runner/GeneratedPluginRegistrant.*
 **/ios/Flutter/.last_build_id
 GoogleService-Info.plist
+**/GoogleService-Info.plist
+**/xcuserdata/
+**/DerivedData/
 *.mode1v3
 *.mode2v3
 *.moved-aside
 *.pbxuser
 *.perspectivev3
 *.xcuserstate
+*.xccheckout
 *.ipa
 
 # Web specific
 web/flutter.js
 web/manifest.json
 
+# Firebase CLI
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
 # Symbolication & Obfuscation
 app.*.symbols
 app.*.map.json
 
-# Antigravity / AI artifacts (if generated locally)
+# AI & Assistant artifacts
 .antigravity/
 .gemini/
+.cursor/
+.windsurf/
+.claude/
