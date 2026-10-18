@@ -163,6 +163,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _showSyncSignInDialog(BuildContext context, WidgetRef ref) {
+    bool isSigningIn = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.cloud_sync_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 10),
+              const Text('Sign in to Sync'),
+            ],
+          ),
+          content: const Text(
+            'Sign in with Google to back up and restore your saved bookmarks across all your devices.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSigningIn ? null : () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.icon(
+              icon: isSigningIn
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.login_rounded, size: 18),
+              label: Text(isSigningIn ? 'Signing in...' : 'Sign In with Google'),
+              onPressed: isSigningIn
+                  ? null
+                  : () async {
+                      setDialogState(() => isSigningIn = true);
+                      try {
+                        final userCred = await ref
+                            .read(authControllerProvider)
+                            .signInWithGoogle();
+
+                        if (!context.mounted) return;
+
+                        if (userCred != null) {
+                          Navigator.pop(context);
+                          // Auto pull from cloud & two-way sync
+                          await ref
+                              .read(syncNotifierProvider.notifier)
+                              .triggerSync();
+                          final syncState = ref.read(syncNotifierProvider);
+                          if (context.mounted && syncState.message != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(syncState.message!)),
+                            );
+                          }
+                        } else {
+                          // User closed or cancelled account picker
+                          setDialogState(() => isSigningIn = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Sign in was cancelled.'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        setDialogState(() => isSigningIn = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Sign in failed: ${e.toString().replaceFirst('Exception: ', '')}',
+                            ),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Color _parseColor(String hexColor) {
     try {
       final hex = hexColor.replaceAll('#', '');
@@ -189,6 +281,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final categoriesAsync = ref.watch(categoryNotifierProvider);
     final selectedContentIds = ref.watch(contentSelectionProvider);
     final isSelectionMode = selectedContentIds.isNotEmpty;
+    final authUser = ref.watch(authStateProvider).valueOrNull;
+    final isAuthenticated = authUser != null && !authUser.isAnonymous;
 
     // Clear selection if category filter or search query changes
     ref.listen<int?>(selectedCategoryIdProvider, (prev, next) {
@@ -327,8 +421,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    isLabelVisible:
-                        count > 0 && syncState.status != SyncStatus.syncing,
+                    isLabelVisible: isAuthenticated &&
+                        count > 0 &&
+                        syncState.status != SyncStatus.syncing,
                     backgroundColor: Colors.amber,
                     textColor: Colors.black,
                     offset: const Offset(-4, 4),
@@ -342,33 +437,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             )
                           : const Icon(Icons.cloud_sync_rounded),
-                      tooltip: count > 0
-                          ? 'Sync with Cloud ($count unsynced)'
-                          : 'Sync with Cloud',
+                      tooltip: !isAuthenticated
+                          ? 'Sign in to Sync'
+                          : (count > 0
+                              ? 'Sync with Cloud ($count unsynced)'
+                              : 'Sync with Cloud'),
                       onPressed: syncState.status == SyncStatus.syncing
                           ? null
                           : () async {
-                              final authUser =
-                                  ref.read(authStateProvider).valueOrNull;
-                              final isAnonymous =
-                                  authUser == null || authUser.isAnonymous;
-
-                              if (isAnonymous) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      count > 0
-                                          ? 'You have $count unsynced bookmark${count > 1 ? 's' : ''}. Sign in with Google to sync them to the cloud.'
-                                          : 'Sign in with Google to sync bookmarks across devices.',
-                                    ),
-                                    action: SnackBarAction(
-                                      label: 'Sign In',
-                                      onPressed: () =>
-                                          AccountBottomSheet.show(context),
-                                    ),
-                                    duration: const Duration(seconds: 4),
-                                  ),
-                                );
+                              if (!isAuthenticated) {
+                                _showSyncSignInDialog(context, ref);
                                 return;
                               }
 
