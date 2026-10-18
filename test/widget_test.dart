@@ -6,6 +6,7 @@ import 'package:socia_saver/models/category.dart';
 import 'package:socia_saver/models/shared_content.dart';
 import 'package:socia_saver/providers/category_provider.dart';
 import 'package:socia_saver/providers/content_selection_provider.dart';
+import 'package:socia_saver/screens/categories_screen.dart';
 import 'package:socia_saver/widgets/content_card.dart';
 import 'package:socia_saver/widgets/socmed_icon.dart';
 
@@ -258,6 +259,116 @@ void main() {
 
       // Card 42 is deselected
       expect(container.read(contentSelectionProvider), isNot(contains(42)));
+    });
+  });
+
+  group('CategoriesScreen Color Picker Tests', () {
+    testWidgets('Retains default colors and opens Custom Color Picker dialog',
+        (WidgetTester tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          categoryNotifierProvider.overrideWith(
+            (ref) => MockCategoryNotifier(ref, []),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: CategoriesScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Tap 'New Category' FAB
+      await tester.tap(find.text('New Category'));
+      await tester.pumpAndSettle();
+
+      // Add Master Category dialog should be open
+      expect(find.text('Add Master Category'), findsOneWidget);
+      expect(find.text('Select Category Color'), findsOneWidget);
+
+      // Color picker icon button should be visible alongside default colors
+      final colorizeButton = find.byTooltip('Custom Color Picker');
+      expect(colorizeButton, findsOneWidget);
+
+      // Tap the color picker button
+      await tester.tap(colorizeButton);
+      await tester.pumpAndSettle();
+
+      // Custom Color Picker dialog should appear
+      expect(find.text('Custom Color Picker'), findsOneWidget);
+      expect(find.text('Hue'), findsOneWidget);
+      expect(find.text('Saturation'), findsOneWidget);
+      expect(find.text('Brightness'), findsOneWidget);
+      expect(find.text('Palette Presets'), findsOneWidget);
+      expect(find.text('Select Color'), findsOneWidget);
+      expect(find.text('Cancel'), findsNWidgets(2));
+
+      // Select a preset color from palette presets in picker
+      await tester.tap(find.text('Select Color'));
+      await tester.pumpAndSettle();
+
+      // Custom Color Picker closes, returning to Add Master Category dialog
+      expect(find.text('Custom Color Picker'), findsNothing);
+      expect(find.text('Add Master Category'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Custom Color Picker dialog renders without overflow on narrow screen',
+        (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final container = ProviderContainer(
+        overrides: [
+          categoryNotifierProvider.overrideWith(
+            (ref) => MockCategoryNotifier(ref, []),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: CategoriesScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('New Category'));
+      await tester.pumpAndSettle();
+
+      // Check default category swatches are rendered with compact 25x25 size
+      final animatedContainers = tester.widgetList<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      // There should be 18 default colors
+      expect(animatedContainers.length, equals(18));
+      for (final container in animatedContainers) {
+        final boxConstraints = container.constraints;
+        expect(boxConstraints?.maxWidth, equals(25));
+        expect(boxConstraints?.maxHeight, equals(25));
+      }
+
+      // Tap Custom Color Picker button
+      await tester.tap(find.byTooltip('Custom Color Picker'));
+      await tester.pumpAndSettle();
+
+      // Ensure no overflow errors occurred
+      expect(tester.takeException(), isNull);
+      expect(find.text('Custom Color Picker'), findsOneWidget);
     });
   });
 }

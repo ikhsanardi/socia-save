@@ -60,7 +60,27 @@ class ContentCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Content'),
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        title: Row(
+          children: [
+            Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Delete Content',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         content: const Text('Are you sure you want to delete this saved link?'),
         actions: [
           TextButton(

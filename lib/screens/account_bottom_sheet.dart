@@ -74,11 +74,25 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+            contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+            title: Row(
               children: [
-                Icon(Icons.error_outline_rounded, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Sign In Error'),
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Sign In Error',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             content: Text(
@@ -211,7 +225,27 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        title: Row(
+          children: [
+            Icon(
+              Icons.logout_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Sign Out',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         content: const Text(
           'Are you sure you want to sign out? Your bookmarks will remain safely stored in your Google Cloud account.',
         ),

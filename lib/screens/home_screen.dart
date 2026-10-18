@@ -70,7 +70,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add Content Link'),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+          contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          title: const Row(
+            children: [
+              Icon(Icons.add_link_rounded, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Add Content Link',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
           content: TextField(
             controller: textController,
             autofocus: true,
@@ -111,7 +127,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Items'),
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+        contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        title: Row(
+          children: [
+            Icon(
+              Icons.delete_sweep_outlined,
+              size: 20,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Delete Items',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         content: Text(
           'Are you sure you want to delete $count saved ${count == 1 ? 'item' : 'items'}? This cannot be undone.',
         ),
@@ -171,14 +207,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          titlePadding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+          contentPadding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
           title: Row(
             children: [
               Icon(
                 Icons.cloud_sync_rounded,
+                size: 20,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(width: 10),
-              const Text('Sign in to Sync'),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Sign in to Sync',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           content: const Text(

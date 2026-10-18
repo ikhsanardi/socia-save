@@ -133,14 +133,19 @@ class _EditContentBottomSheetState
           // Header: Title & Socmed Icon
           Row(
             children: [
-              const Text(
-                'Edit Saved Content',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              const Icon(Icons.edit_note_rounded, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Edit Saved Content',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               SocmedIcon(
                 source: widget.item.socmedSource,
                 url: widget.item.rawUrl,

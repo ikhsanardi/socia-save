@@ -92,14 +92,19 @@ class _ShareReceiverBottomSheetState
           // Title Header
           Row(
             children: [
-              const Text(
-                'Save Shared Content',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              const Icon(Icons.bookmark_add_outlined, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Save Shared Content',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               if (_ogData != null)
                 SocmedIcon(
                   source: _ogData!.socmedSource,

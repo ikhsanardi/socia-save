@@ -59,17 +59,20 @@ class CategoryFilterModal extends ConsumerWidget {
           // Modal Header Row
           Row(
             children: [
-              const Icon(Icons.filter_list_rounded, size: 22),
+              const Icon(Icons.filter_list_rounded, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Filter by Category',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              const Expanded(
+                child: Text(
+                  'Filter by Category',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
-              if (selectedCategoryId != null)
+              if (selectedCategoryId != null) ...[
+                const SizedBox(width: 8),
                 TextButton(
                   onPressed: () {
                     ref.read(selectedCategoryIdProvider.notifier).state = null;
@@ -77,6 +80,7 @@ class CategoryFilterModal extends ConsumerWidget {
                   },
                   child: const Text('Clear Filter'),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
