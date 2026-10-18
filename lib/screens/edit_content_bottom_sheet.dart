@@ -141,7 +141,10 @@ class _EditContentBottomSheetState
                 ),
               ),
               const Spacer(),
-              SocmedIcon(source: widget.item.socmedSource),
+              SocmedIcon(
+                source: widget.item.socmedSource,
+                url: widget.item.rawUrl,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -165,10 +168,12 @@ class _EditContentBottomSheetState
           // Content Title Input
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Content Title',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.title_rounded),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              prefixIcon: const Icon(Icons.title_rounded),
             ),
             maxLines: 2,
           ),
@@ -178,9 +183,9 @@ class _EditContentBottomSheetState
           categoriesAsync.when(
             data: (categories) {
               if (categories.isEmpty) {
-                return const Text(
+                return Text(
                   'No categories available. Create one in Master Categories.',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 );
               }
 
@@ -193,10 +198,12 @@ class _EditContentBottomSheetState
 
               return DropdownButtonFormField<int>(
                 initialValue: _selectedCategoryId,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Select Category',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.category_rounded),
                 ),
                 items: categories.map((cat) {
                   final color = _parseColor(cat.colorHex);

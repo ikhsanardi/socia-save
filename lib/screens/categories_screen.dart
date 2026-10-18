@@ -48,44 +48,70 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                   TextField(
                     controller: textController,
                     autofocus: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Category Name (e.g. Recipes, Tech)',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Select Category Color'),
-                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Select Category Color',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 4,
+                    runSpacing: 4,
                     children: _colors.map((colorHex) {
                       final isSelected = selectedColor == colorHex;
                       final color = _parseColor(colorHex);
                       return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: () {
                           setDialogState(() {
                             selectedColor = colorHex;
                           });
                         },
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: isSelected
-                                ? Border.all(color: Colors.white, width: 3)
-                                : null,
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.5),
-                                      blurRadius: 6,
-                                      spreadRadius: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surface,
+                                      width: 2.5,
                                     )
-                                  ]
-                                : null,
+                                  : null,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isSelected
+                                      ? color.withValues(alpha: 0.5)
+                                      : Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: isSelected ? 8 : 2,
+                                  spreadRadius: isSelected ? 1 : 0,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -99,6 +125,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   onPressed: () async {
                     final name = textController.text.trim();
                     if (name.isNotEmpty) {
@@ -134,7 +165,13 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
@@ -168,47 +205,173 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            return const Center(
-              child: Text('No categories created yet.'),
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.category_outlined,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'No Categories Yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create custom categories to organize and filter your saved links.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withValues(alpha: 0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      onPressed: _showAddCategoryDialog,
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Add Category'),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: categories.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final category = categories[index];
               final color = _parseColor(category.colorHex);
 
-              return ListTile(
-                leading: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
+              return Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.4),
                   ),
                 ),
-                title: Text(
-                  category.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                  tooltip: 'Delete Category',
-                  onPressed: () => _showDeleteCategoryDialog(category),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          category.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: Theme.of(context).colorScheme.error,
+                          size: 20,
+                        ),
+                        tooltip: 'Delete Category',
+                        onPressed: () => _showDeleteCategoryDialog(category),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error loading categories: $e')),
+        error: (e, st) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 40,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Failed to load categories',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         onPressed: _showAddCategoryDialog,
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('New Category'),
       ),
     );

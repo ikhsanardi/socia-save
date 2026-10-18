@@ -100,7 +100,11 @@ class _ShareReceiverBottomSheetState
                 ),
               ),
               const Spacer(),
-              if (_ogData != null) SocmedIcon(source: _ogData!.socmedSource),
+              if (_ogData != null)
+                SocmedIcon(
+                  source: _ogData!.socmedSource,
+                  url: _ogData!.rawUrl,
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -138,10 +142,12 @@ class _ShareReceiverBottomSheetState
             // Editable Title Field
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Content Title',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.title_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.title_rounded),
               ),
               maxLines: 2,
             ),
@@ -151,9 +157,9 @@ class _ShareReceiverBottomSheetState
             categoriesAsync.when(
               data: (categories) {
                 if (categories.isEmpty) {
-                  return const Text(
+                  return Text(
                     'No categories available. Create one in Master Categories.',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
                   );
                 }
 
@@ -161,10 +167,12 @@ class _ShareReceiverBottomSheetState
 
                 return DropdownButtonFormField<int>(
                   initialValue: _selectedCategoryId,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Select Category',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.category_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.category_rounded),
                   ),
                   items: categories.map((cat) {
                     return DropdownMenuItem<int>(
@@ -190,6 +198,11 @@ class _ShareReceiverBottomSheetState
               width: double.infinity,
               height: 48,
               child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 onPressed: (_selectedCategoryId == null)
                     ? null
                     : () async {

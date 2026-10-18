@@ -26,20 +26,60 @@ class OpenGraphService {
 
   static String detectSource(String url) {
     final lowerUrl = url.toLowerCase();
-    if (lowerUrl.contains('instagram.com') || lowerUrl.contains('instagr.am')) {
+    if (lowerUrl.contains('linkedin.com') ||
+        lowerUrl.contains('lnkd.in') ||
+        lowerUrl.contains('licdn.com') ||
+        lowerUrl.contains('linkedin.cn')) {
+      return 'LinkedIn';
+    } else if (lowerUrl.contains('instagram.com') ||
+        lowerUrl.contains('instagr.am')) {
       return 'Instagram';
-    } else if (lowerUrl.contains('facebook.com') || lowerUrl.contains('fb.watch') || lowerUrl.contains('fb.com')) {
+    } else if (lowerUrl.contains('facebook.com') ||
+        lowerUrl.contains('fb.watch') ||
+        lowerUrl.contains('fb.com') ||
+        lowerUrl.contains('fb.me')) {
       return 'Facebook';
-    } else if (lowerUrl.contains('threads.net')) {
+    } else if (lowerUrl.contains('threads.net') ||
+        lowerUrl.contains('threads.com')) {
       return 'Threads';
     } else if (lowerUrl.contains('tiktok.com')) {
       return 'TikTok';
-    } else if (lowerUrl.contains('youtube.com') || lowerUrl.contains('youtu.be')) {
+    } else if (lowerUrl.contains('youtube.com') ||
+        lowerUrl.contains('youtu.be')) {
       return 'YouTube';
-    } else if (lowerUrl.contains('twitter.com') || lowerUrl.contains('x.com')) {
+    } else if (lowerUrl.contains('twitter.com') ||
+        lowerUrl.contains('x.com') ||
+        lowerUrl.contains('t.co')) {
       return 'X';
+    } else if (lowerUrl.contains('pinterest.com') ||
+        lowerUrl.contains('pin.it')) {
+      return 'Pinterest';
+    } else if (lowerUrl.contains('reddit.com') ||
+        lowerUrl.contains('redd.it')) {
+      return 'Reddit';
+    } else if (lowerUrl.contains('github.com')) {
+      return 'GitHub';
     }
-    return 'Other';
+
+    // Extract domain name so we never show "Other" as a text label
+    try {
+      var cleanUrl = url.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://$cleanUrl';
+      }
+      final uri = Uri.tryParse(cleanUrl);
+      if (uri != null && uri.host.isNotEmpty) {
+        var host = uri.host.toLowerCase();
+        if (host.startsWith('www.')) host = host.substring(4);
+        final parts = host.split('.');
+        if (parts.isNotEmpty && parts.first.isNotEmpty) {
+          final domain = parts.first;
+          return domain[0].toUpperCase() + domain.substring(1);
+        }
+      }
+    } catch (_) {}
+
+    return 'Social Media';
   }
 
   static String extractUrl(String rawText) {

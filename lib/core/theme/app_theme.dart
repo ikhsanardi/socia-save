@@ -22,6 +22,7 @@ class AppTheme {
     'TikTok': Color(0xFFEE1D52),
     'YouTube': Color(0xFFFF0000),
     'X': Color(0xFF1DA1F2),
+    'LinkedIn': Color(0xFF0A66C2),
     'Other': Color(0xFF64748B),
   };
 

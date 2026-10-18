@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socia_saver/models/category.dart';
 import 'package:socia_saver/models/shared_content.dart';
@@ -25,49 +26,64 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'Instagram'))),
       );
-      expect(find.byIcon(Icons.camera_alt_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('Instagram logo'), findsOneWidget);
     });
 
     testWidgets('Renders Facebook icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'Facebook'))),
       );
-      expect(find.byIcon(Icons.facebook_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('Facebook logo'), findsOneWidget);
     });
 
     testWidgets('Renders Threads icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'Threads'))),
       );
-      expect(find.byIcon(Icons.alternate_email_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('Threads logo'), findsOneWidget);
     });
 
     testWidgets('Renders TikTok icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'TikTok'))),
       );
-      expect(find.byIcon(Icons.music_note_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('TikTok logo'), findsOneWidget);
     });
 
     testWidgets('Renders YouTube icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'YouTube'))),
       );
-      expect(find.byIcon(Icons.play_circle_fill_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('YouTube logo'), findsOneWidget);
     });
 
     testWidgets('Renders X / Twitter icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'X'))),
       );
-      expect(find.byIcon(Icons.tag_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('X logo'), findsOneWidget);
+    });
+
+    testWidgets('Renders LinkedIn icon', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'LinkedIn'))),
+      );
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('LinkedIn logo'), findsOneWidget);
     });
 
     testWidgets('Renders fallback link icon for unknown source', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SocmedIcon(source: 'Unknown'))),
       );
-      expect(find.byIcon(Icons.link_rounded), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.bySemanticsLabel('Unknown logo'), findsOneWidget);
     });
   });
 

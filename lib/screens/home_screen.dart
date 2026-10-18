@@ -121,7 +121,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -144,7 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete items: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                     ),
                   );
                 }
@@ -260,9 +266,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.delete_outline_rounded,
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       tooltip: 'Delete selected',
                       onPressed: () => _showBatchDeleteDialog(
@@ -317,14 +323,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     label: Text(
                       count > 99 ? '99+' : '$count',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     isLabelVisible:
                         count > 0 && syncState.status != SyncStatus.syncing,
-                    backgroundColor: Colors.amber,
-                    textColor: Colors.black,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.tertiaryContainer,
+                    textColor:
+                        Theme.of(context).colorScheme.onTertiaryContainer,
                     offset: const Offset(-4, 4),
                     child: IconButton(
                       icon: syncState.status == SyncStatus.syncing
@@ -426,7 +434,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               // Search Input Bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
                 child: TextField(
                   controller: _searchController,
                   focusNode: _searchFocusNode,
@@ -445,7 +453,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : null,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   onChanged: (val) {
@@ -457,7 +465,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Active Category Filter Indicator Chip
               if (selectedCategoryId != null && selectedCategory != null) ...[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Row(
                     children: [
                       InputChip(
@@ -539,8 +547,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, st) =>
-                      Center(child: Text('Error loading contents: $e')),
+                  error: (e, st) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Failed to load bookmarks',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.tonalIcon(
+                            onPressed: () =>
+                                ref.refresh(sharedContentNotifierProvider),
+                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -548,6 +585,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           floatingActionButton: isSelectionMode
               ? null
               : FloatingActionButton.extended(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   onPressed: _showManualAddDialog,
                   icon: const Icon(Icons.add_link_rounded),
                   label: const Text('Add Link'),

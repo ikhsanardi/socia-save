@@ -221,7 +221,13 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Sign Out'),
           ),
@@ -463,32 +469,35 @@ class _AccountBottomSheetState extends ConsumerState<AccountBottomSheet> {
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
                 ] else ...[
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleSignOut,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.logout_rounded,
                       size: 18,
-                      color: Colors.red,
+                      color: Theme.of(context).colorScheme.error,
                     ),
-                    label: const Text(
+                    label: Text(
                       'Sign Out',
                       style: TextStyle(
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: Colors.red.withValues(alpha: 0.4),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .error
+                            .withValues(alpha: 0.4),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),

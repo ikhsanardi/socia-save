@@ -28,9 +28,19 @@ void main() {
       expect(OpenGraphService.detectSource(url), equals('YouTube'));
     });
 
-    test('Detect Unknown URL as Other', () {
+    test('Detect LinkedIn URL', () {
+      const url = 'https://www.linkedin.com/posts/activity-123456789';
+      expect(OpenGraphService.detectSource(url), equals('LinkedIn'));
+    });
+
+    test('Detect LinkedIn Short URL (lnkd.in)', () {
+      const url = 'https://lnkd.in/gAbCdEf';
+      expect(OpenGraphService.detectSource(url), equals('LinkedIn'));
+    });
+
+    test('Detects clean domain name for custom websites (never returns Other)', () {
       const url = 'https://example.com/article/1';
-      expect(OpenGraphService.detectSource(url), equals('Other'));
+      expect(OpenGraphService.detectSource(url), equals('Example'));
     });
   });
 
